@@ -46,7 +46,7 @@ help:
 
 	@printf "$(BOLD)  Python$(RESET)\n"
 	@printf "    $(GREEN)install$(RESET)        Install dependencies via uv\n"
-	@printf "    $(GREEN)run$(RESET)            Run the application\n"
+	@printf "    $(GREEN)run$(RESET)            Run the application (pass ARGS=...)\n"
 	@printf "    $(GREEN)test$(RESET)           Run the test suite\n"
 	@printf "    $(GREEN)lint$(RESET)           Check linting\n"
 	@printf "    $(GREEN)lint-fix$(RESET)       Auto-fix linting issues\n"
@@ -80,7 +80,7 @@ install:
 
 run:
 	$(call RUN,\
-		uv run python main.py,\
+		uv run python -m greth $(ARGS),\
 		exited cleanly,\
 		application exited with error)
 

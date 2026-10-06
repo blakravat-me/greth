@@ -1,4 +1,0 @@
-global plan v1: initial plan
-scout list_dir({"path": "."}): ok [scout-aaa598d2]
-scout list_dir({"path": "."}): ok [scout-002ff772]
-scout list_dir({"path": "."}): ok [scout-4848ab20]

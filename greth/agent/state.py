@@ -3,7 +3,7 @@
 
 from typing import TypedDict
 
-from config import START_PHASE
+from greth.config import START_PHASE
 
 
 class AgentState(TypedDict, total=False):
@@ -23,6 +23,8 @@ class AgentState(TypedDict, total=False):
     orientation: str
     decision: str
     last_result: str
+    tool_error: bool
+    error_message: str
     journal: list[str]
     artifacts: list[str]
 
@@ -38,6 +40,8 @@ def new_state(target: str, objective: str, instruction: str) -> AgentState:
         "instruction": instruction,
         "phase": START_PHASE,
         "reached": False,
+        "tool_error": False,
+        "error_message": "",
         "global_plan": {"version": 0, "steps": []},
         "operator_plan": {"version": 0, "steps": []},
         "replan_reason": "initial plan",

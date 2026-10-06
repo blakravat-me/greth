@@ -8,9 +8,9 @@
 #   update_plan(steps, completed_steps, summary)  operator decide only
 #   set_plan(steps)                               global/plan
 #   checkpoint(objective_done, evidence, completed_steps, replan_reason)   global/checkpoint
-from greth.context import subsection
-from greth.routing import allowed
-from greth.state import AgentState
+from greth.agent.context import subsection
+from greth.agent.routing import allowed
+from greth.agent.state import AgentState
 
 
 def validate(call: dict, by_name: dict) -> None:

@@ -29,6 +29,8 @@ PLAN_VIEW_DONE = 6  # done steps shown per plan; earlier ones are only counted
 JOURNAL_LINES = 6  # recent journal lines shown; the full journal lives in an artifact
 ARTIFACT_LINES = 8  # recent artifacts shown in the index
 MAX_WAIT = 15  # seconds, ceiling of the wait while the model server is down
+MAX_CONNECTION_ATTEMPTS = 5  # bounded retries before stopping on model connectivity issues
+MAX_TOOL_CALL_ATTEMPTS = 5  # malformed responses get retried with feedback, then fail visibly
 RECURSION_LIMIT = 2**31 - 1  # LangGraph step cap, raised so the loop runs until Ctrl+C
 
 DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:8b")

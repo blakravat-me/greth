@@ -25,8 +25,9 @@ def _refresh(name: str) -> None:
 
     try:
         _poll_done(sess, _capture(name))
-    except RuntimeError:
-        pass  # session vanished mid-call; handled by the next status call
+    except RuntimeError as exc:
+        _drop(name)
+        raise RuntimeError(f"Unable to refresh tmux session '{name}': {exc}") from exc
 
 
 def proc_status() -> str:

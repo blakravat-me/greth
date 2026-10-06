@@ -7,9 +7,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from helpers.console import console
+from greth.ui.console import console
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 COMPOSE_FILE = PROJECT_ROOT / "docker-compose.yml"
 
 TAIL_LINES = 40

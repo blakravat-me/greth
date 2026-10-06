@@ -25,7 +25,7 @@ from threading import Lock
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from helpers.docker import COMPOSE_FILE, PROJECT_ROOT, service_name
+from greth.runtime.docker import COMPOSE_FILE, PROJECT_ROOT, service_name
 
 # ---------------------------------------------------------------------------
 # Configuration

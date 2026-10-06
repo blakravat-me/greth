@@ -8,7 +8,7 @@ from typing import Any, TypedDict
 
 import httpx
 
-from greth_logging.logger import debug
+from greth.logging.logger import debug
 
 REQUEST_TIMEOUT = 360.0  # read timeout in seconds
 TEMPERATURE = 0.2
@@ -25,6 +25,14 @@ class LLMConnectionError(RuntimeError):
 
 class LLMResponseError(ValueError):
     """Server answered but the reply is unusable; the caller retries with an Error section."""
+
+    def __init__(self, message: str, *, response_text: str = "") -> None:
+        super().__init__(message)
+        self.response_text = response_text
+
+
+class LLMRequestError(RuntimeError):
+    """The server rejected the request; retrying the same request will not help."""
 
 
 class ToolCall(TypedDict):
@@ -111,7 +119,9 @@ class ChatOllama:
         except httpx.HTTPStatusError as exc:
             status = exc.response.status_code
             body = exc.response.text[:300]
-            raise LLMConnectionError(f"HTTP {status}: {body}") from exc
+            if status in (408, 429) or status >= 500:
+                raise LLMConnectionError(f"HTTP {status}: {body}") from exc
+            raise LLMRequestError(f"HTTP {status}: {body}") from exc
 
         except httpx.TimeoutException as exc:
             raise LLMConnectionError(f"request timed out: {self.endpoint}") from exc
@@ -192,19 +202,30 @@ class ChatOllama:
         message = message if isinstance(message, dict) else {}
 
         raw_calls = message.get("tool_calls")
-        content = (message.get("content") or "")[:500]
+        raw_content = message.get("content")
+        content = raw_content[:500] if isinstance(raw_content, str) else ""
 
         debug(
             {
                 "event": "ollama.response",
-                "tool_calls": raw_calls,
-                "content": content,
+                "tool_call_count": len(raw_calls) if isinstance(raw_calls, list) else 0,
+                "tool_names": [
+                    call.get("function", {}).get("name")
+                    for call in raw_calls
+                    if isinstance(call, dict) and isinstance(call.get("function"), dict)
+                ]
+                if isinstance(raw_calls, list)
+                else [],
+                "has_content": bool(content),
             }
         )
 
         if not isinstance(raw_calls, list) or not raw_calls:
             cut = "; the output hit the token limit, answer shorter" if data.get("done_reason") == "length" else ""
             names = ", ".join(t["name"] for t in tools)
-            raise LLMResponseError(f"the model returned no tool call; reply only by calling: {names}{cut}")
+            raise LLMResponseError(
+                f"the model returned no tool call; reply only by calling: {names}{cut}",
+                response_text=content,
+            )
 
         return [self._parse(call) for call in raw_calls]

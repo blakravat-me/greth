@@ -1,8 +1,8 @@
 # greth/dispatch.py
 """Tool execution: read_artifact is served locally, every other tool goes to tools.policy."""
 
-from greth.artifact import read_artifact
-from tools import policy
+from greth.agent.artifact import read_artifact
+from greth.tools import policy
 
 
 def dispatch(phase: str, call: dict) -> object:

@@ -1,8 +1,8 @@
 # greth/routing.py
 """Phase transition rules, before and after the objective is reached."""
 
-from config import AFTER, BEFORE
-from greth.state import AgentState
+from greth.agent.state import AgentState
+from greth.config import AFTER, BEFORE
 
 
 def allowed(state: AgentState) -> tuple[str, ...]:

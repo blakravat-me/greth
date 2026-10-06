@@ -4,8 +4,8 @@
 import uuid
 from pathlib import Path
 
-from config import ARTIFACT_DIR, JOURNAL_LINES, LINE_CHARS, READ_CHARS
-from greth.context import clip
+from greth.agent.context import clip
+from greth.config import ARTIFACT_DIR, JOURNAL_LINES, LINE_CHARS, READ_CHARS
 
 
 def save_artifact(name: str, text: str) -> str:
@@ -17,9 +17,11 @@ def save_artifact(name: str, text: str) -> str:
 
 
 def read_artifact(reference: str, start: int = 0, length: int = READ_CHARS) -> str:
-    """Read a slice of a stored output; reference 'journal' is the full journal."""
+    """Read a slice of a stored output; raise explicitly when it does not exist."""
     path = ARTIFACT_DIR / f"{Path(reference).name}.txt"
-    return path.read_text(encoding="utf-8")[start:][:length] if path.is_file() else "not found"
+    if not path.is_file():
+        raise FileNotFoundError(f"artifact '{Path(reference).name}' was not found")
+    return path.read_text(encoding="utf-8")[start : start + length]
 
 
 def remember(journal: list[str], lines: list[str]) -> list[str]:

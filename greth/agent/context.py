@@ -1,9 +1,9 @@
 # greth/context.py
 """Bounded markdown context: bounded text in, tool call out."""
 
-from config import LIMITS, PLAN_VIEW_DONE, SECTION_CHARS
-from greth.routing import allowed
-from greth.state import AgentState
+from greth.agent.routing import allowed
+from greth.agent.state import AgentState
+from greth.config import LIMITS, PLAN_VIEW_DONE, SECTION_CHARS
 
 HEADER_KEYS = ("target", "objective", "instruction", "plan", "phase", "handoff")
 STATE_KEYS = {

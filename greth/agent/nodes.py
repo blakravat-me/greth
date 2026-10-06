@@ -3,19 +3,32 @@
 
 import functools
 import json
+import re
 from typing import Literal
 
 from langgraph.types import Command
 
-from config import ARTIFACT_LINES, GLOBAL, LIMITS, PREVIEW_CHARS
-from greth.artifact import remember, save_artifact
-from greth.context import clip
-from greth.dispatch import dispatch
-from greth.model import request
-from greth.plans import complete_steps, replace_pending
-from greth.routing import route
-from greth.state import CLEARED, AgentState
-from greth.validation import parse_checkpoint, parse_decision, parse_observation, parse_orientation, parse_plan, texts
+from greth.agent.artifact import remember, save_artifact
+from greth.agent.context import clip
+from greth.agent.dispatch import dispatch
+from greth.agent.model import request
+from greth.agent.plans import complete_steps, replace_pending
+from greth.agent.routing import route
+from greth.agent.state import CLEARED, AgentState
+from greth.agent.validation import parse_checkpoint, parse_decision, parse_observation, parse_orientation, parse_plan, texts
+from greth.config import ARTIFACT_LINES, GLOBAL, PREVIEW_CHARS
+
+_EXIT_CODE_RE = re.compile(r"\[(?:Exit code|Last command exit code):\s*(-?\d+)\]")
+
+
+def _tool_output_error(output: str) -> bool:
+    """Recognize explicit tool failures and failed shell-command exit statuses."""
+    stripped = output.lstrip()
+    if stripped.startswith(("[ERROR]", "ERROR ", "[BUSY]", "[TIMEOUT")):
+        return True
+
+    exit_match = _EXIT_CODE_RE.search(output)
+    return exit_match is not None and int(exit_match.group(1)) != 0
 
 
 def planner(state: AgentState) -> dict:
@@ -94,23 +107,32 @@ def checkpoint(state: AgentState) -> Command[Literal["plan", "observe"]]:
 
 
 def act(state: AgentState) -> dict:
-    """Dispatch the model's tool calls; keep full outputs as artifacts, a preview in state."""
+    """Run tool calls in order, persist full results, and stop immediately on failure."""
     phase = state["phase"]
     calls = request(state, phase, "act", many=True)
-    share = max(LIMITS["last_result"] // len(calls) - 100, 100)  # every call keeps a visible slice
     blocks, index, lines = [], [], []
+    error_message = ""
     for call in calls:
         try:
-            output, status = str(dispatch(phase, call)), "ok"
+            output = str(dispatch(phase, call))
+            failed = _tool_output_error(output)
+            status = "error" if failed else "ok"
         except Exception as problem:  # a failing tool is an observation, not a crash
             output, status = f"ERROR {type(problem).__name__}: {problem}", "error"
+            failed = True
         reference = save_artifact(phase, output)
         preview = clip(json.dumps(call["arguments"], ensure_ascii=False), PREVIEW_CHARS)
-        blocks.append(f"### {call['name']} [{reference}]\n```\n{clip(output, share)}\n```")
+        blocks.append(f"### {call['name']} [{reference}]\n```\n{output}\n```")
         index.append(f"{reference}: {call['name']} {' '.join(output[:PREVIEW_CHARS].split())}")
         lines.append(f"{phase} {call['name']}({preview}): {status} [{reference}]")
+        if failed:
+            error_message = f"{call['name']} failed [{reference}]: {output[:500]}"
+            break
+
     return {
         "last_result": "\n\n".join(blocks),
         "artifacts": (state["artifacts"] + index)[-ARTIFACT_LINES:],
         "journal": remember(state["journal"], lines),
+        "tool_error": bool(error_message),
+        "error_message": error_message,
     }
