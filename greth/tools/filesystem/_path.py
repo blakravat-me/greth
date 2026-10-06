@@ -11,5 +11,8 @@ def resolve(path: str) -> Path:
     """Map a path into the workspace; reject anything that resolves outside it."""
     target = (WORKSPACE / (path.strip() or ".")).resolve()
     if not target.is_relative_to(WORKSPACE):
-        raise ValueError(f"path is outside the workspace: {path}")
+        raise ValueError(
+            f"path is outside the workspace: {path!r}. Use a workspace-relative path; "
+            "for sandbox system directories such as /usr/bin, use container_list_dir."
+        )
     return target

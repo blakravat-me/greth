@@ -110,7 +110,7 @@ def act(state: AgentState) -> dict:
     """Run tool calls in order, persist full results, and stop immediately on failure."""
     phase = state["phase"]
     calls = request(state, phase, "act", many=True)
-    blocks, index, lines = [], [], []
+    blocks, index, lines, results = [], [], [], []
     error_message = ""
     for call in calls:
         try:
@@ -123,6 +123,7 @@ def act(state: AgentState) -> dict:
         reference = save_artifact(phase, output)
         preview = clip(json.dumps(call["arguments"], ensure_ascii=False), PREVIEW_CHARS)
         blocks.append(f"### {call['name']} [{reference}]\n```\n{output}\n```")
+        results.append({"name": call["name"], "reference": reference, "output": output, "status": status})
         index.append(f"{reference}: {call['name']} {' '.join(output[:PREVIEW_CHARS].split())}")
         lines.append(f"{phase} {call['name']}({preview}): {status} [{reference}]")
         if failed:
@@ -131,6 +132,7 @@ def act(state: AgentState) -> dict:
 
     return {
         "last_result": "\n\n".join(blocks),
+        "tool_results": results,
         "artifacts": (state["artifacts"] + index)[-ARTIFACT_LINES:],
         "journal": remember(state["journal"], lines),
         "tool_error": bool(error_message),

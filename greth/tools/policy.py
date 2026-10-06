@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 from greth.tools.filesystem.list_dir import ListDirArgs, list_dir
 from greth.tools.filesystem.read_file import ReadFileArgs, read_file
 from greth.tools.filesystem.write_file import WriteFileArgs, write_file
-from greth.tools.process.proc import ProcArgs, proc
+from greth.tools.process.proc import ContainerListDirArgs, ProcArgs, container_list_dir, proc
 from greth.tools.process.proc_kill import ProcKillArgs, proc_kill
 from greth.tools.process.proc_output import ProcOutputArgs, proc_output
 from greth.tools.process.proc_status import ProcStatusArgs, proc_status
@@ -113,6 +113,13 @@ MUTATES = frozenset({"striker", "operator"})
 
 TOOLS: tuple[Tool, ...] = (
     Tool("list_dir", "List entries in a directory.", ListDirArgs, list_dir, READ_ONLY),
+    Tool(
+        "container_list_dir",
+        "List approved system binary directories inside the sandbox, including /usr/bin.",
+        ContainerListDirArgs,
+        container_list_dir,
+        READ_ONLY,
+    ),
     Tool("read_file", "Read a file's contents.", ReadFileArgs, read_file, READ_ONLY),
     Tool("write_file", "Create or overwrite a file.", WriteFileArgs, write_file, MUTATES),
     Tool("proc", "Run a command, send input, or peek at a tmux session.", ProcArgs, proc, MUTATES),

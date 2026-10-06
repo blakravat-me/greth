@@ -83,6 +83,16 @@ def service_name() -> str:
     return _SERVICE_CACHE
 
 
+def exec_in_container(*args: str) -> subprocess.CompletedProcess[str]:
+    """Run an argument-safe, non-interactive command in the sandbox container."""
+    if not args:
+        raise ValueError("container command cannot be empty")
+    result = _compose("exec", "-T", service_name(), *args, timeout=QUICK_TIMEOUT)
+    if result.returncode != 0:
+        raise RuntimeError(_tail(result.stderr or result.stdout))
+    return result
+
+
 def ensure_container() -> None:
     """Build and start the OffSec sandbox. No timeout on the build itself: a cold
     pull + apt/pip install can legitimately take longer than any fixed guess, and

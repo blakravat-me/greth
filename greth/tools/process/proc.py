@@ -22,6 +22,7 @@ import uuid
 from dataclasses import dataclass, field
 from functools import lru_cache
 from threading import Lock
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -37,6 +38,7 @@ STALL_SECONDS = 2.0
 MAX_REPEAT = 3
 CAPTURE_LINES = 200
 SUBPROCESS_TIMEOUT = 20
+MAX_CONTAINER_DIR_ENTRIES = 500
 
 CONTROL_KEYS = {"C-c", "C-z", "C-d", "C-l"}
 
@@ -62,6 +64,31 @@ def _norm_command(command: object, is_input: bool) -> str:
 
 def _valid_session_name(name: str) -> bool:
     return _SESSION_NAME_RE.fullmatch(name) is not None
+
+
+class ContainerListDirArgs(BaseModel):
+    """List approved, read-only system binary directories inside the sandbox."""
+
+    path: Literal["/usr/bin", "/usr/local/bin", "/bin", "/usr/sbin", "/sbin"] = Field(
+        "/usr/bin",
+        description="Approved system binary directory inside the sandbox container.",
+    )
+
+
+def container_list_dir(path: str = "/usr/bin") -> str:
+    """List an approved sandbox system directory without invoking a shell."""
+    from greth.runtime.docker import exec_in_container
+
+    validated = ContainerListDirArgs(path=path)
+    try:
+        entries = exec_in_container("ls", "-1A", "--", validated.path).stdout.splitlines()
+    except RuntimeError as exc:
+        return f"[ERROR] Unable to list sandbox directory {validated.path}: {exc}"
+    if not entries:
+        return "[Empty directory.]"
+    shown = "\n".join(entries[:MAX_CONTAINER_DIR_ENTRIES])
+    remaining = len(entries) - MAX_CONTAINER_DIR_ENTRIES
+    return f"{shown}\n[{remaining} more entries not shown]" if remaining > 0 else shown
 
 
 # ---------------------------------------------------------------------------

@@ -23,13 +23,14 @@ class AgentState(TypedDict, total=False):
     orientation: str
     decision: str
     last_result: str
+    tool_results: list[dict]
     tool_error: bool
     error_message: str
     journal: list[str]
     artifacts: list[str]
 
 
-CLEARED = {"observation": "", "orientation": "", "decision": "", "last_result": ""}
+CLEARED = {"observation": "", "orientation": "", "decision": "", "last_result": "", "tool_results": []}
 
 
 def new_state(target: str, objective: str, instruction: str) -> AgentState:
@@ -42,6 +43,7 @@ def new_state(target: str, objective: str, instruction: str) -> AgentState:
         "reached": False,
         "tool_error": False,
         "error_message": "",
+        "tool_results": [],
         "global_plan": {"version": 0, "steps": []},
         "operator_plan": {"version": 0, "steps": []},
         "replan_reason": "initial plan",

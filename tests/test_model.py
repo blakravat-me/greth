@@ -171,13 +171,24 @@ def test_cli_displays_full_tool_output(monkeypatch):
     from rich.console import Console
 
     import greth.cli as cli
+    import greth.ui.output as output_ui
 
     stream = StringIO()
-    monkeypatch.setattr(cli, "console", Console(file=stream, force_terminal=False, color_system=None))
+    monkeypatch.setattr(output_ui, "console", Console(file=stream, force_terminal=False, color_system=None))
 
     cli._display_update(
         "act",
-        {"last_result": "### list_dir [scout-ref]\nREADME.md\nsrc/", "tool_error": False},
+        {
+            "tool_results": [
+                {
+                    "name": "list_dir",
+                    "reference": "scout-ref",
+                    "output": "README.md\nsrc/",
+                    "status": "ok",
+                }
+            ],
+            "tool_error": False,
+        },
     )
 
     assert "README.md" in stream.getvalue()
