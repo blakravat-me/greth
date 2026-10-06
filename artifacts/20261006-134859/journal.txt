@@ -1,0 +1,4 @@
+global plan v1: initial plan
+scout list_dir({"path": "."}): ok [scout-50c768e0]
+scout list_dir({"path": "."}): ok [scout-c6bb370a]
+scout list_dir({"path": "."}): ok [scout-7ffbc0bc]

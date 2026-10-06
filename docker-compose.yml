@@ -1,0 +1,35 @@
+services:
+  greth-offensive:
+    build:
+      context: containers
+      dockerfile: Dockerfile
+    image: greth-offensive:latest
+    hostname: sandbox
+
+    init: true
+    restart: unless-stopped
+    command: ["sleep", "infinity"]
+
+    tty: true
+    stdin_open: true
+
+    working_dir: /workspace
+    volumes:
+      - ./workspace:/workspace
+
+    environment:
+      TZ: UTC
+
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+
+    security_opt:
+      - seccomp:unconfined
+
+    networks:
+      - greth-net
+
+networks:
+  greth-net:
+    driver: bridge

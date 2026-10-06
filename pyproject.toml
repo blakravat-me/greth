@@ -1,0 +1,62 @@
+[project]
+# Core project metadata.
+name = "greth"
+version = "0.1.0"
+description = "Directed Autonomous Offensive Security Agent"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.12"
+
+dependencies = [
+    "httpx>=0.28.1",
+    "json-repair>=0.63.4",
+    "langchain>=1.4.3",
+    "langgraph>=1.2.12",
+    "rich>=15.0.0",
+]
+
+
+[dependency-groups]
+# Development and testing dependencies.
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.6",
+]
+
+
+[tool.pytest.ini_options]
+# Pytest configuration.
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+pythonpath = ["."]
+
+
+[tool.ruff]
+line-length = 130
+target-version = "py312"
+
+extend-exclude = [
+    ".git",
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+]
+
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "PGH",  # pygrep-hooks, including noqa checks
+]
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
